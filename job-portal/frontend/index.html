@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hired.io – The Modern Job Platform</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="navbar-content">
+      <a href="index.html" class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+        Hired.io
+      </a>
+      <nav class="nav-links">
+        <a href="jobs.html" class="nav-link">Find Jobs</a>
+        <a href="about.html" class="nav-link">About</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+        <a href="login.html" class="btn btn-secondary">Login</a>
+        <a href="login.html#register" class="btn btn-primary">Get Started</a>
+        <button id="themeToggle" class="btn theme-toggle" type="button">🌙</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO SECTION -->
+    <section class="page-container hero">
+      <div class="hero-text">
+        <h1 class="hero-title">Connect with top talent and dream jobs today.</h1>
+        <p class="hero-subtitle">
+          The most professional platform for modern hiring. seamless, fast, and transparent.
+          Join thousands of companies and candidates building the future.
+        </p>
+        <div class="hero-actions">
+          <a href="jobs.html" class="btn btn-primary btn-large">Browse Open Roles</a>
+          <a href="login.html#register" class="btn btn-secondary btn-large">Post a Job</a>
+        </div>
+      </div>
+      <div class="hero-image-container">
+        <!-- Using the generated hero image -->
+        <img src="images/hero.png" alt="Hired.io Illustration" class="hero-image" />
+      </div>
+    </section>
+
+    <!-- STATS (Moved below hero for clarity) -->
+    <section class="page-container">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">120+</div>
+          <div class="stat-label">Active Jobs</div>
+          <div class="stat-sub">Across engineering & design</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">45</div>
+          <div class="stat-label">Companies</div>
+          <div class="stat-sub">From startups to enterprise</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">3K+</div>
+          <div class="stat-label">Candidates</div>
+          <div class="stat-sub">Ready to work</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="page-container" style="margin-top: 5rem; margin-bottom: 5rem;">
+      <h2 class="section-title">How it works</h2>
+      <div class="three-col-grid">
+        <div class="card">
+          <h3 class="muted-heading">1. Create Profile</h3>
+          <p class="muted">
+            Sign up as a candidate to showcase your skills, or as a recruiter to find talent. Setup takes less than 2 minutes.
+          </p>
+        </div>
+        <div class="card">
+          <h3 class="muted-heading">2. Connect</h3>
+          <p class="muted">
+            Apply to jobs with a single click, or invite candidates directly. Our matching engine does the heavy lifting.
+          </p>
+        </div>
+        <div class="card">
+          <h3 class="muted-heading">3. Hire</h3>
+          <p class="muted">
+            Manage interviews, track status, and close the deal. Integrated tools make hiring transparent and efficient.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="page-container footer-inner">
+      <div style="display: flex; flex-direction: column; text-align: left; gap: 0.5rem;">
+        <span style="font-weight: 700; color: var(--text-main);">Hired.io</span>
+        <span class="muted">Built for the future of work.</span>
+      </div>
+      <div class="muted">
+        &copy; 2024 Hired.io. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

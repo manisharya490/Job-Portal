@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard – Hired.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <header class="navbar">
+    <div class="navbar-content">
+      <a href="index.html" class="logo">Hired.io</a>
+      <nav class="nav-links">
+        <span id="userInfo" class="nav-user"></span>
+        <a href="jobs.html" class="nav-link">Jobs</a>
+        <button id="logoutBtn" class="btn btn-secondary" type="button">Logout</button>
+        <button id="themeToggle" class="btn theme-toggle" type="button">🌙</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page-container">
+    <!-- ADMIN DASHBOARD -->
+    <section id="adminSection" class="hidden">
+      <h1 class="section-title">Admin overview</h1>
+      <div class="stats-grid">
+        <div class="stat-card card">
+          <div class="stat-label">Recruiters</div>
+          <div id="adminRecruiters" class="stat-number">0</div>
+        </div>
+        <div class="stat-card card">
+          <div class="stat-label">Candidates</div>
+          <div id="adminCandidates" class="stat-number">0</div>
+        </div>
+        <div class="stat-card card">
+          <div class="stat-label">Jobs</div>
+          <div id="adminJobs" class="stat-number">0</div>
+        </div>
+        <div class="stat-card card">
+          <div class="stat-label">Applications</div>
+          <div id="adminApps" class="stat-number">0</div>
+        </div>
+      </div>
+
+      <div class="dashboard-layout">
+        <div class="card">
+          <h2 class="section-title">Recruiters</h2>
+          <div id="adminRecruiterList" class="dashboard-grid"></div>
+        </div>
+
+        <div class="card">
+          <h2 class="section-title">Candidates</h2>
+          <div id="adminCandidateList" class="dashboard-grid"></div>
+        </div>
+
+        <div class="card">
+          <h2 class="section-title">All applications</h2>
+          <div id="adminAppsList" class="dashboard-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RECRUITER DASHBOARD -->
+    <section id="recruiterSection" class="hidden">
+      <h1 class="section-title">Recruiter dashboard</h1>
+
+      <section class="card">
+        <h2 class="section-title">Post a job</h2>
+        <form id="jobForm" class="form">
+          <div class="form-group">
+            <label class="form-label">Job title</label>
+            <input class="form-input" type="text" name="title" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Company</label>
+            <input class="form-input" type="text" name="company" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <input class="form-input" type="text" name="location" placeholder="Remote / City" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select class="form-select" name="type">
+              <option value="full-time">Full-time</option>
+              <option value="contract">Contract</option>
+              <option value="part-time">Part-time</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-textarea" name="description" rows="4" required></textarea>
+          </div>
+
+          <div id="jobMsg" class="message hidden"></div>
+          <button type="submit" class="btn btn-primary">Publish Job</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title">Applications to your jobs</h2>
+        <!-- SKELETON LOADING -->
+        <div id="recruiterAppsSkeleton" class="skeleton-container">
+          <div class="skeleton-row">
+            <div class="skeleton-block skeleton-wide"></div>
+            <div class="skeleton-block"></div>
+            <div class="skeleton-block skeleton-narrow"></div>
+            <div class="skeleton-block skeleton-narrow"></div>
+            <div class="skeleton-block"></div>
+          </div>
+          <div class="skeleton-row">
+            <div class="skeleton-block skeleton-wide"></div>
+            <div class="skeleton-block"></div>
+            <div class="skeleton-block skeleton-narrow"></div>
+            <div class="skeleton-block skeleton-narrow"></div>
+            <div class="skeleton-block"></div>
+          </div>
+        </div>
+        <div id="recruiterAppsList" class="dashboard-grid"></div>
+      </section>
+    </section>
+
+    <!-- CANDIDATE DASHBOARD (ENHANCED WITH SKELETON + TIMELINE) -->
+    <section id="candidateSection" class="hidden">
+      <h1 class="section-title">Welcome, <span id="candidateName"></span></h1>
+
+      <!-- JOBS SECTION WITH SKELETON -->
+      <section class="card">
+        <h2 class="section-title">Latest Opportunities</h2>
+        <!-- SKELETON LOADING -->
+        <div id="jobsSkeleton" class="skeleton-jobs">
+          <div class="skeleton-job-card">
+            <div class="skeleton-job-header">
+              <div class="skeleton-title"></div>
+              <div class="skeleton-meta">
+                <div class="skeleton-badge"></div>
+                <div class="skeleton-text"></div>
+              </div>
+            </div>
+            <div class="skeleton-description"></div>
+            <div class="skeleton-button"></div>
+          </div>
+          <div class="skeleton-job-card">
+            <div class="skeleton-job-header">
+              <div class="skeleton-title"></div>
+              <div class="skeleton-meta">
+                <div class="skeleton-badge"></div>
+                <div class="skeleton-text"></div>
+              </div>
+            </div>
+            <div class="skeleton-description"></div>
+            <div class="skeleton-button"></div>
+          </div>
+        </div>
+        <div id="candidateJobs" class="jobs-list"></div>
+      </section>
+
+      <!-- APPLICATIONS TIMELINE (NEW) -->
+      <section class="card">
+        <h2 class="section-title">Your Applications</h2>
+        <!-- SKELETON LOADING -->
+        <div id="appsTimelineSkeleton" class="skeleton-timeline">
+          <div class="skeleton-timeline-item"></div>
+          <div class="skeleton-timeline-item"></div>
+        </div>
+        <!-- STATUS TIMELINE -->
+        <div id="candidateAppsTimeline" class="status-timeline-container"></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
