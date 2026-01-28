@@ -380,7 +380,7 @@ async def create_job(
 
     db = get_db(request)
     job_doc = {
-        **job.dict(),
+        **job.model_dump(),
         "status": "pending", # Force pending status
         "recruiter": current["_id"],
         "created_at": datetime.utcnow(),

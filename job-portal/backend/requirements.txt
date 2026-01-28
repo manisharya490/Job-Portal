@@ -5,6 +5,6 @@ motor==3.3.2
 python-multipart==0.0.6
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-pydantic==1.10.14
+pydantic>=2.0
 bcrypt==3.2.0
 fastapi-mail==1.4.1
