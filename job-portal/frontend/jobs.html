@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
+
 <head>
   <meta charset="UTF-8" />
   <title>Jobs – Hired.io</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <header class="navbar">
     <div class="navbar-content">
-      <a href="index.html" class="logo">Hired.io</a>
+      <a href="index.html" class="logo"><img src="images/logo.png" alt="Hired.io" class="navbar-logo-img"></a>
       <nav class="nav-links">
         <a href="jobs.html" class="nav-link active">Jobs</a>
         <a href="about.html" class="nav-link">About</a>
@@ -21,23 +23,78 @@
   </header>
 
   <main class="page-container">
-    <section class="card">
-      <div class="jobs-header">
-        <div>
-          <h1 class="section-title">Open roles</h1>
-          <p class="muted">Browse all available opportunities on Hired.io.</p>
-        </div>
-        <div class="jobs-count">
-          <span id="jobsCount">Loading…</span>
-        </div>
-      </div>
+    <div class="jobs-header" style="margin-bottom: 2rem;">
+      <h1 class="section-title">Open roles</h1>
+      <p class="muted">Find your next career opportunity.</p>
+    </div>
 
-      <div id="jobsList">
-        <p class="muted">Loading jobs…</p>
-      </div>
-    </section>
+    <div class="jobs-page-grid">
+      <!-- SIDEBAR -->
+      <aside class="filters-sidebar">
+        <div class="filter-group">
+          <label class="form-label">Search</label>
+          <input type="text" id="searchInput" class="form-input" placeholder="Title, company, keywords...">
+        </div>
+
+        <div class="filter-group">
+          <label class="form-label">Location</label>
+          <input type="text" id="locationInput" class="form-input" placeholder="e.g. Remote, New York">
+        </div>
+
+        <div class="filter-group">
+          <label class="form-label">Job Type</label>
+          <select id="typeInput" class="form-select">
+            <option value="all">Any Type</option>
+            <option value="full-time">Full-time</option>
+            <option value="contract">Contract</option>
+            <option value="part-time">Part-time</option>
+          </select>
+        </div>
+
+        <button id="searchBtn" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">Search Jobs</button>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+          <p class="muted" style="font-size: 0.85rem; margin-bottom: 0.5rem;">Don't see what you're looking for?</p>
+          <button id="alertBtn" class="btn btn-secondary" style="width: 100%">🔔 Get Job Alerts</button>
+        </div>
+      </aside>
+
+      <!-- RESULTS -->
+      <section>
+        <div class="jobs-count" style="margin-bottom: 1rem; color: var(--text-muted);">
+          <span id="jobsCount">Loading...</span>
+        </div>
+        <div id="jobsList">
+          <!-- Jobs will be inserted here -->
+        </div>
+      </section>
+    </div>
   </main>
+
+  <!-- CHAT WIDGET -->
+  <div id="chatWidget" class="chat-widget hidden">
+    <div class="chat-header">
+      <h3 id="chatHeaderTitle">Messages</h3>
+      <button id="closeChatBtn" class="btn-icon">&times;</button>
+    </div>
+    <div class="chat-body">
+      <div id="chatContacts" class="chat-contacts">
+        <!-- Contact List -->
+      </div>
+      <div id="chatWindow" class="chat-window hidden">
+        <div id="chatMessages" class="chat-messages"></div>
+        <div class="chat-input-area">
+          <input type="text" id="chatInput" placeholder="Type a message...">
+          <button id="sendChatBtn">Send</button>
+        </div>
+        <button id="backToContactsBtn" class="btn-text btn-sm" style="margin-top:0.5rem">&larr; Back</button>
+      </div>
+    </div>
+  </div>
+
+  <button id="toggleChatBtn" class="chat-toggle-btn">💬</button>
 
   <script src="script.js"></script>
 </body>
+
 </html>

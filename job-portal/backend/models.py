@@ -27,17 +27,18 @@ class JobBase(BaseModel):
     description: str
     company: Optional[str] = None
     location: Optional[str] = None
-    type: Optional[str] = "full-time"  # full-time | contract | part-time
-
+    type: Optional[str] = "full-time"
+    views: Optional[int] = 0
+    status: Optional[str] = "pending"  # "pending" | "approved" | "rejected"
 
 class JobCreate(JobBase):
     pass
-
 
 class JobOut(JobBase):
     id: str
     recruiter: str
     created_at: datetime
+    views: int = 0
 
 
 class ApplicationOut(BaseModel):
@@ -46,4 +47,18 @@ class ApplicationOut(BaseModel):
     resume: Optional[str]
     applied_at: datetime
     status: str
-    message: Optional[str] = None
+class AppUpdate(BaseModel):
+    status: Optional[str]
+    message: Optional[str]
+
+class Message(BaseModel):
+    sender: str
+    recipient: str
+    content: str
+    timestamp: datetime
+    read: bool = False
+
+class AlertCreate(BaseModel):
+    email: Optional[str] = None
+    keyword: str
+    frequency: Optional[str] = "daily"

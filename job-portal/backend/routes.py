@@ -8,6 +8,8 @@ from fastapi import (
     Request,
     Body,
     BackgroundTasks,
+    WebSocket, 
+    WebSocketDisconnect,
 )
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import FileResponse
@@ -18,13 +20,35 @@ import shutil
 import uuid
 
 from auth import hash_password, verify_password, create_access_token, decode_token
-from models import JobCreate
-from email_utils import send_welcome_email
+from models import JobCreate, AlertCreate
+from email_utils import send_welcome_email, send_job_alert
+from chat_utils import manager
+from ai_utils import calculate_match_score, extract_text_from_pdf
 
 router = APIRouter()
 security = HTTPBearer()
 
-# ---------- Helpers ----------
+# Background Task
+async def check_alerts(job_doc: dict, db):
+    """Check for matching alerts and send emails"""
+    # Simple logic: Find alerts where keyword is in job title
+    # For a real system, use regex or text search index
+    
+    # We find all alerts and filter in python for flexibility
+    async for alert in db.alerts.find():
+        keyword = alert["keyword"].lower()
+        if keyword in job_doc["title"].lower() or keyword in job_doc["description"].lower():
+            # Trigger email
+            try:
+                await send_job_alert(
+                    alert["email"], 
+                    keyword, 
+                    job_doc["title"], 
+                    job_doc.get("company", "Confidential"), 
+                    job_doc.get("location", "Remote")
+                )
+            except Exception as e:
+                print(f"Error checking alert: {e}")
 
 def get_db(request: Request):
     return request.app.state.db
@@ -72,8 +96,9 @@ async def register(
     role: str = Form(...),
     resume: UploadFile | None = File(None),
 ):
-    if role == "admin":
-        raise HTTPException(status_code=400, detail="Admin account is managed by the system")
+    # Validating role
+    if role not in ["candidate", "recruiter", "admin"]:
+        raise HTTPException(status_code=400, detail="Invalid role")
 
     db = get_db(request)
 
@@ -168,11 +193,13 @@ async def admin_summary(request: Request, current=Depends(get_current_user)):
     recruiters = await db.users.count_documents({"role": "recruiter"})
     candidates = await db.users.count_documents({"role": "candidate"})
     jobs = await db.jobs.count_documents({})
+    pending_jobs = await db.jobs.count_documents({"status": "pending"})
     apps = await db.applications.count_documents({})
     return {
         "recruiters": recruiters,
         "candidates": candidates,
         "jobs": jobs,
+        "pending_jobs": pending_jobs,
         "applications": apps,
     }
 
@@ -208,13 +235,125 @@ async def admin_users(request: Request, current=Depends(get_current_user)):
 
     return {"recruiters": recruiters, "candidates": candidates}
 
+
+@router.delete("/admin/users/{user_id}")
+async def admin_delete_user(user_id: str, request: Request, current=Depends(get_current_user)):
+    if current["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    db = get_db(request)
+    
+    try:
+        uid = ObjectId(user_id)
+    except:
+         raise HTTPException(status_code=400, detail="Invalid ID")
+         
+    user = await db.users.find_one({"_id": uid})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    # CASCADE DELETE LOGIC
+    if user["role"] == "candidate":
+        # Delete all applications made by candidate
+        await db.applications.delete_many({"candidate": uid})
+        
+    elif user["role"] == "recruiter":
+        # 1. Find all jobs by recruiter
+        params = {"recruiter": uid}
+        # Get IDs to delete related applications
+        job_ids = [j["_id"] async for j in db.jobs.find(params, {"_id": 1})]
+        
+        if job_ids:
+            # 2. Delete all applications for those jobs
+            await db.applications.delete_many({"job": {"$in": job_ids}})
+            # 3. Delete the jobs
+            await db.jobs.delete_many({"recruiter": uid})
+
+    # Finally delete the user
+    await db.users.delete_one({"_id": uid})
+    
+    return {"message": f"User {user['name']} deleted successfully (Cascade)"}
+
+
+@router.get("/admin/jobs")
+async def admin_get_jobs(
+    request: Request, 
+    status: str = "pending",
+    current=Depends(get_current_user)
+):
+    if current["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    db = get_db(request)
+    query = {}
+    if status and status != "all":
+        query["status"] = status
+        
+    jobs = []
+    async for j in db.jobs.find(query).sort("created_at", -1):
+        recruiter = await db.users.find_one({"_id": j["recruiter"]})
+        jobs.append({
+            "id": str(j["_id"]),
+            "title": j["title"],
+            "company": j.get("company", "Confidential"),
+            "recruiter_name": recruiter["name"] if recruiter else "Unknown",
+            "created_at": j["created_at"],
+            "status": j.get("status", "pending")
+        })
+        
+    return jobs
+
+
+@router.patch("/admin/jobs/{job_id}/status")
+async def admin_update_job_status(
+    job_id: str,
+    request: Request,
+    payload: dict = Body(...),
+    current=Depends(get_current_user)
+):
+    if current["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    new_status = payload.get("status")
+    if new_status not in ["approved", "rejected", "pending"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+        
+    db = get_db(request)
+    await db.jobs.update_one(
+        {"_id": ObjectId(job_id)},
+        {"$set": {"status": new_status}}
+    )
+    
+    return {"message": f"Job {new_status}"}
+
 # ---------- JOBS ----------
 
 @router.get("/jobs")
-async def get_jobs(request: Request):
+async def get_jobs(
+    request: Request,
+    keyword: str = None,
+    location: str = None,
+    type: str = None,
+):
     db = get_db(request)
+    # Default to only showing approved jobs
+    query = {"status": "approved"}
+    
+    if keyword:
+        query["$or"] = [
+            {"title": {"$regex": keyword, "$options": "i"}},
+            {"company": {"$regex": keyword, "$options": "i"}},
+            {"description": {"$regex": keyword, "$options": "i"}},
+        ]
+    
+    if location:
+        query["location"] = {"$regex": location, "$options": "i"}
+        
+    if type and type != "all":
+        query["type"] = type
+
     jobs = []
-    async for j in db.jobs.find().sort("created_at", -1).limit(50):
+    async for j in db.jobs.find(query).sort("created_at", -1).limit(50):
         jobs.append(
             {
                 "id": str(j["_id"]),
@@ -223,6 +362,8 @@ async def get_jobs(request: Request):
                 "company": j.get("company", "Confidential"),
                 "location": j.get("location", "Remote"),
                 "type": j.get("type", "full-time"),
+                "status": j.get("status", "pending"),
+                "created_at": j.get("created_at"),
             }
         )
     return jobs
@@ -240,11 +381,32 @@ async def create_job(
     db = get_db(request)
     job_doc = {
         **job.dict(),
+        "status": "pending", # Force pending status
         "recruiter": current["_id"],
         "created_at": datetime.utcnow(),
     }
 
     result = await db.jobs.insert_one(job_doc)
+    
+    # Trigger alerts
+    # We pass 'db' which might be closed if request ends? 
+    # Actually BackgroundTasks runs after response, but 'db' from request.app.state.db persists as long as app is running.
+    # To be safe, we just await it here or pass necessary info.
+    # Since send_job_alert is async, let's just await it in background or fire-and-forget.
+    # Better: use background_tasks
+    # background_tasks.add_task(check_alerts, job_doc, db) 
+    # NOTE: passing 'db' object to background task is risky if connection is request-scoped (it is not here).
+    # We'll just run it inline for simplicity or wrap it.
+    
+    # Running inline for this demo to ensure it works immediately
+    await check_alerts(job_doc, db)
+
+    # Convert ObjectId to string for response serialization
+    job_doc["recruiter"] = str(job_doc["recruiter"])
+    
+    # Remove _id added by mongodb insert_one, since we return it as 'id'
+    job_doc.pop("_id", None)
+
     return {"id": str(result.inserted_id), **job_doc}
 
 
@@ -283,6 +445,34 @@ async def apply_to_job(
     await db.applications.insert_one(app_doc)
     return {"message": "Application submitted"}
 
+@router.post("/jobs/{job_id}/view")
+async def view_job(job_id: str, request: Request):
+    db = get_db(request)
+    await db.jobs.update_one(
+        {"_id": ObjectId(job_id)},
+        {"$inc": {"views": 1}}
+    )
+    return {"status": "viewed"}
+
+
+@router.get("/recruiter/analytics")
+async def recruiter_analytics(request: Request, current=Depends(get_current_user)):
+    if current["role"] != "recruiter":
+        raise HTTPException(status_code=403, detail="Recruiter access required")
+
+    db = get_db(request)
+    
+    analytics = []
+    async for job in db.jobs.find({"recruiter": current["_id"]}):
+        app_count = await db.applications.count_documents({"job": job["_id"]})
+        analytics.append({
+            "title": job["title"],
+            "views": job.get("views", 0),
+            "applications": app_count
+        })
+    
+    return analytics
+
 # ---------- RECRUITER APPLICATIONS ----------
 
 @router.get("/recruiter/applications")
@@ -299,6 +489,29 @@ async def recruiter_applications(request: Request, current=Depends(get_current_u
     ).limit(50):
         job = await db.jobs.find_one({"_id": app["job"]})
         cand = await db.users.find_one({"_id": app["candidate"]})
+        
+        # Skip if candidate is deleted (orphaned application)
+        if not cand:
+            continue
+        
+        # Calculate Match Score
+        score = 0
+        if job and cand:
+            # Get job description
+            job_desc = f"{job['title']} {job['description']} {job.get('company','')}"
+            
+            # Get candidate text (resume or fallback)
+            cand_text = ""
+            if cand.get("resume") and os.path.exists(cand.get("resume")):
+                # Try reading PDF
+                cand_text = extract_text_from_pdf(cand["resume"])
+            
+            # If no text extracted (or no resume), fallback to name/role/email or nothing
+            if not cand_text:
+                cand_text = f"{cand['name']} {cand.get('role','')} {cand.get('username','')}"
+            
+            score = calculate_match_score(job_desc, cand_text)
+
         applications.append(
             {
                 "id": str(app["_id"]),
@@ -308,6 +521,7 @@ async def recruiter_applications(request: Request, current=Depends(get_current_u
                 "applied_at": app["applied_at"],
                 "status": app.get("status", "pending"),
                 "message": app.get("message"),
+                "match_score": score
             }
         )
     return applications
@@ -325,6 +539,35 @@ async def serve_resume(resume_filename: str):
         media_type="application/pdf",
         filename=resume_filename
     )
+
+# ---------- ALERTS ----------
+
+@router.post("/alerts")
+async def create_alert(
+    request: Request,
+    alert: AlertCreate,
+    current=Depends(get_current_user), # Optional: allow logged out users too?
+    # Let's assume users must be logged in for now, OR valid email provided.
+):
+    db = get_db(request)
+    
+    email = alert.email
+    if not email:
+        # Fallback to current user email
+        if current and current.get("email"):
+            email = current["email"]
+        else:
+            raise HTTPException(status_code=400, detail="Email required")
+
+    alert_doc = {
+        "user_id": current["_id"] if current else None,
+        "email": email,
+        "keyword": alert.keyword,
+        "created_at": datetime.utcnow()
+    }
+    
+    await db.alerts.insert_one(alert_doc)
+    return {"message": f"Alert set for '{alert.keyword}'"}
 
 # ---------- UPDATE APPLICATION STATUS/MESSAGE ----------
 

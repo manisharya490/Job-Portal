@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
+
 <head>
   <meta charset="UTF-8" />
   <title>Login / Register – Hired.io</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <!-- NAVBAR -->
   <header class="navbar">
     <div class="navbar-content">
-      <a href="index.html" class="logo">Hired.io</a>
+      <a href="index.html" class="logo"><img src="images/logo.png" alt="Hired.io" class="navbar-logo-img"></a>
       <nav class="nav-links">
         <a href="jobs.html" class="nav-link">Jobs</a>
         <a href="about.html" class="nav-link">About</a>
@@ -29,23 +31,11 @@
       <form id="loginForm" class="form">
         <div class="form-group">
           <label class="form-label">Username</label>
-          <input
-            class="form-input"
-            type="text"
-            name="username"
-            placeholder="yourusername"
-            required
-          />
+          <input class="form-input" type="text" name="username" placeholder="yourusername" required />
         </div>
         <div class="form-group">
           <label class="form-label">Password</label>
-          <input
-            class="form-input"
-            type="password"
-            name="password"
-            placeholder="••••••••"
-            required
-          />
+          <input class="form-input" type="password" name="password" placeholder="••••••••" required />
         </div>
 
         <div id="loginMsg" class="message hidden"></div>
@@ -71,46 +61,22 @@
       <form id="registerForm" class="form">
         <div class="form-group">
           <label class="form-label">Name</label>
-          <input
-            class="form-input"
-            type="text"
-            name="name"
-            placeholder="Full name"
-            required
-          />
+          <input class="form-input" type="text" name="name" placeholder="Full name" required />
         </div>
 
         <div class="form-group">
           <label class="form-label">Username</label>
-          <input
-            class="form-input"
-            type="text"
-            name="username"
-            placeholder="choose a username"
-            required
-          />
+          <input class="form-input" type="text" name="username" placeholder="choose a username" required />
         </div>
 
         <div class="form-group">
           <label class="form-label">Email</label>
-          <input
-            class="form-input"
-            type="email"
-            name="email"
-            placeholder="you@example.com"
-            required
-          />
+          <input class="form-input" type="email" name="email" placeholder="you@example.com" required />
         </div>
 
         <div class="form-group">
           <label class="form-label">Password</label>
-          <input
-            class="form-input"
-            type="password"
-            name="password"
-            placeholder="Create a password"
-            required
-          />
+          <input class="form-input" type="password" name="password" placeholder="Create a password" required />
         </div>
 
         <div class="form-group">
@@ -119,7 +85,7 @@
             <option value="">Select role</option>
             <option value="candidate">Candidate</option>
             <option value="recruiter">Recruiter</option>
-            <!-- Admin is fixed (admin/logadmin), not created here -->
+            <option value="admin">Admin</option>
           </select>
         </div>
 
@@ -137,4 +103,5 @@
 
   <script src="script.js"></script>
 </body>
+
 </html>
